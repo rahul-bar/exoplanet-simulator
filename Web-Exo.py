@@ -1,26 +1,51 @@
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
-st.title("Exoplanet Transit Simulator")
+st.title("Exoplanet Orbit Simulator")
 
-# sliders
-planet_radius = st.slider("Planet Radius (Earth radii)", 0.5, 5.0, 1.0)
-orbit_period = st.slider("Orbital Period (days)", 1, 50, 10)
-inclination = st.slider("Inclination (degrees)", 80, 90, 90)
+# Controls
+radius = st.slider("Orbit Radius (AU)", 0.5, 5.0, 1.0)
+period = st.slider("Orbital Period (days)", 1, 50, 10)
+planet_size = st.slider("Planet Size", 5, 20, 10)
 
-# time array
-t = np.linspace(-1, 1, 200)
+# Time array
+t = np.linspace(0, 2*np.pi, 200)
 
-# simple transit model
-depth = (planet_radius/10)**2
-light = 1 - depth*np.exp(-t**2*5)
+x = radius*np.cos(t)
+y = radius*np.sin(t)
 
-# plot
-fig, ax = plt.subplots()
-ax.plot(t, light)
-ax.set_xlabel("Time")
-ax.set_ylabel("Relative Brightness")
-ax.set_title("Transit Light Curve")
+frames = []
 
-st.pyplot(fig)
+for i in range(len(t)):
+    frames.append(
+        go.Frame(
+            data=[
+                go.Scatter(
+                    x=[x[i]],
+                    y=[y[i]],
+                    mode="markers",
+                    marker=dict(size=planet_size)
+                )
+            ]
+        )
+    )
+
+fig = go.Figure(
+    data=[
+        go.Scatter(x=[0], y=[0], mode="markers", marker=dict(size=40), name="Star"),
+        go.Scatter(x=[x[0]], y=[y[0]], mode="markers", marker=dict(size=planet_size), name="Planet")
+    ],
+    layout=go.Layout(
+        xaxis=dict(range=[-5,5]),
+        yaxis=dict(range=[-5,5]),
+        title="Planet Orbit Animation",
+        updatemenus=[{
+            "type": "buttons",
+            "buttons":[{"label":"Play","method":"animate","args":[None]}]
+        }]
+    ),
+    frames=frames
+)
+
+st.plotly_chart(fig)
